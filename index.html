@@ -1,55 +1,443 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Taakhi Services</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taakhi - Services & Pricing</title>
+    <!-- Include SheetJS library to read Excel files directly in the browser -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <style>
+        :root {
+            --taakhi-primary: #5aa4c2; /* Professional Medical Blue */
+            --taakhi-secondary: #57C5B6; /* Teal accent */
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+            --white: #ffffff;
+            --danger: #dc3545;
+            --success: #28a745;
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* Header Styling */
+        header {
+            background-color: var(--taakhi-primary);
+            color: var(--white);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-container img {
+            max-height: 50px;
+        }
+
+        .logo-container h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .contact-info {
+            text-align: right;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Layout */
+        .container {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+            height: calc(100vh - 120px);
+        }
+
+        .left-panel, .right-panel {
+            flex: 1;
+            background: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        h3 {
+            margin-top: 0;
+            color: var(--taakhi-primary);
+            border-bottom: 2px solid var(--taakhi-secondary);
+            padding-bottom: 10px;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .controls input, .controls select {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .controls input {
+            flex: 2;
+        }
+
+        .controls select {
+            flex: 1;
+        }
+
+        /* Tables */
+        .table-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            background-color: var(--taakhi-primary);
+            color: var(--white);
+            z-index: 1;
+        }
+
+        tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        /* Buttons & Inputs */
+        button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--white);
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .btn-add {
+            background-color: var(--success);
+        }
+
+        .btn-remove {
+            background-color: var(--danger);
+        }
+
+        td input[type="number"] {
+            width: 60px;
+            padding: 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        /* Total Section */
+        .total-section {
+            margin-top: 20px;
+            text-align: right;
+            padding: 15px;
+            background-color: #e8f4f8;
+            border-radius: 8px;
+            border: 1px solid var(--taakhi-secondary);
+        }
+
+        .total-section h2 {
+            margin: 0;
+            color: var(--taakhi-primary);
+        }
+
+        .file-upload {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 4px;
+            color: #856404;
+        }
+    </style>
 </head>
 <body>
-<header>
-<img src="logo.png" class="logo">
-<div class="phones">(+961) 08375575 | (+961) 08375675 | (+961) 08375775</div>
-</header>
-<div class="container">
-<div class="left">
-<h2>Available Services</h2>
-<input id="search" placeholder="Search service">
-<select id="dept"></select>
-<table id="results"></table>
-</div>
-<div class="right">
-<h2>Selected Services</h2>
-<table id="selected"></table>
-<h3>Total: <span id="total">0</span></h3>
-</div>
-</div>
-<script src="app.js"></script>
-  <script>
-let total=0;
-fetch('taakhi_prices.json')
-.then(r=>r.json())
-.then(data=>{
-window.allData=data;
 
-document.getElementById('search').addEventListener('input',function(){
-let q=this.value.toLowerCase();
-let rows=data.filter(x=>x.name.toLowerCase().includes(q)).slice(0,100);
-let html='';
-rows.forEach((item,i)=>{
-html+=`<tr>
-<td><input type="checkbox" onchange="updateTotal(${item.price},this)"></td>
-<td>${item.name}</td>
-<td>${item.code}</td>
-<td>${item.price.toFixed(2)}</td>
-</tr>`;
-});
-document.getElementById('results').innerHTML=html;
-});
-});
-function updateTotal(price,cb){
-total += cb.checked ? price : -price;
-document.getElementById('total').innerText=total.toFixed(2);
-}
-</script>
+    <!-- Header Section with Logo and Contact Info -->
+    <header>
+        <div class="logo-container">
+            <!-- Place your image here. If it fails to load, it shows the text -->
+            <img src="taakhi-logo.png" alt="Taakhi Logo" onerror="this.style.display='none'">
+            <h1>Taakhi Services Portal</h1>
+        </div>
+        <div class="contact-info">
+            Contact us:<br>
+            (+961) 08375575 | (+961) 08375675 | (+961) 08375775
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- LEFT PANEL: Search and Available Services -->
+        <div class="left-panel">
+            <h3>Available Services</h3>
+            
+            <div class="controls">
+                <input type="text" id="searchInput" placeholder="Search for a service... (Keeps focus while adding)">
+                <select id="departmentFilter">
+                    <option value="">All Departments</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table id="availableTable">
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th>Service</th>
+                            <th>Price ($)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Items populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Fallback if the browser blocks automatic file loading -->
+            <div class="file-upload" id="fileUploadWrapper" style="display:none;">
+                <label><b>Could not load 'all.xlsx' automatically due to browser security.</b><br>Please select the file manually:</label><br><br>
+                <input type="file" id="excelFile" accept=".xlsx, .xls">
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Selected Services and Total -->
+        <div class="right-panel">
+            <h3>Selected Services</h3>
+            
+            <div class="table-container" style="flex-grow: 1; margin-bottom: 15px;">
+                <table id="selectedTable">
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Price</th>
+                            <th>Qty</th>
+                            <th>Disc. (%)</th>
+                            <th>Total ($)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Selected items populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="total-section">
+                <h2>Grand Total: $<span id="grandTotal">0.00</span></h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        let availableItems = [];
+        let selectedItems = [];
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            loadExcelData();
+            
+            // Set up search and filter listeners
+            document.getElementById('searchInput').addEventListener('input', renderAvailableItems);
+            document.getElementById('departmentFilter').addEventListener('change', renderAvailableItems);
+            
+            // Manual File Upload Fallback Listener
+            document.getElementById('excelFile').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    processWorkbook(workbook);
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        });
+
+        // 1. Fetch and Parse 'all.xlsx'
+        async function loadExcelData() {
+            try {
+                const response = await fetch('all.xlsx');
+                if (!response.ok) throw new Error("File not found locally");
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, {type: 'array'});
+                processWorkbook(workbook);
+            } catch (e) {
+                console.warn("Auto-fetch blocked or file missing. Showing file upload prompt.", e);
+                document.getElementById('fileUploadWrapper').style.display = 'block';
+            }
+        }
+
+        function processWorkbook(workbook) {
+            document.getElementById('fileUploadWrapper').style.display = 'none'; // Hide fallback
+            
+            const sheetName = workbook.SheetNames[0]; // Assuming data is in Sheet1
+            const sheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(sheet);
+            
+            // Map the Excel columns (Guar Name -> Item, Weight -> Price)
+            availableItems = jsonData.map((row, index) => ({
+                id: index,
+                department: row['Department'] || 'General',
+                name: row['Guar Name'] || 'Unknown Service',
+                price: parseFloat(row['Weight']) || 0
+            })).filter(item => item.name !== 'Unknown Service'); // Filter empty rows
+            
+            populateDepartments();
+            renderAvailableItems();
+        }
+
+        // 2. Populate Department Dropdown
+        function populateDepartments() {
+            const select = document.getElementById('departmentFilter');
+            const departments = [...new Set(availableItems.map(item => item.department))].sort();
+            
+            select.innerHTML = '<option value="">All Departments</option>';
+            departments.forEach(dept => {
+                if (dept.trim() !== '') {
+                    const option = document.createElement('option');
+                    option.value = dept;
+                    option.textContent = dept;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        // 3. Render Available Services Table
+        function renderAvailableItems() {
+            const searchStr = document.getElementById('searchInput').value.toLowerCase();
+            const deptFilter = document.getElementById('departmentFilter').value;
+            const tbody = document.querySelector('#availableTable tbody');
+            
+            tbody.innerHTML = '';
+            
+            const filtered = availableItems.filter(item => {
+                const matchSearch = item.name.toLowerCase().includes(searchStr);
+                const matchDept = deptFilter === '' || item.department === deptFilter;
+                return matchSearch && matchDept;
+            });
+            
+            filtered.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.department}</td>
+                    <td>${item.name}</td>
+                    <td>$${item.price.toFixed(2)}</td>
+                    <td><button class="btn-add" onclick="addItem(${item.id})">Add</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 4. Add to Selected
+        function addItem(id) {
+            const item = availableItems.find(i => i.id === id);
+            
+            // Prevent duplicate items
+            if (selectedItems.some(i => i.id === id)) {
+                alert('This service is already in your selected list! You can adjust the quantity on the right.');
+            } else {
+                selectedItems.push({
+                    ...item,
+                    qty: 1,
+                    discount: 0
+                });
+                renderSelectedItems();
+            }
+            
+            // Keep the search active and focused to add multiple items easily
+            document.getElementById('searchInput').focus();
+        }
+
+        // 5. Remove Item
+        function removeItem(index) {
+            selectedItems.splice(index, 1);
+            renderSelectedItems();
+        }
+
+        // 6. Update Values
+        function updateQty(index, val) {
+            let q = parseInt(val);
+            if(isNaN(q) || q < 1) q = 1;
+            selectedItems[index].qty = q;
+            renderSelectedItems();
+        }
+
+        function updateDiscount(index, val) {
+            let d = parseFloat(val);
+            if(isNaN(d) || d < 0) d = 0;
+            if(d > 100) d = 100;
+            selectedItems[index].discount = d;
+            renderSelectedItems();
+        }
+
+        // 7. Render Selected Items & Totals
+        function renderSelectedItems() {
+            const tbody = document.querySelector('#selectedTable tbody');
+            tbody.innerHTML = '';
+            let grandTotal = 0;
+            
+            selectedItems.forEach((item, index) => {
+                const total = item.price * item.qty * (1 - item.discount / 100);
+                grandTotal += total;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>$${item.price.toFixed(2)}</td>
+                    <td><input type="number" min="1" value="${item.qty}" onchange="updateQty(${index}, this.value)"></td>
+                    <td><input type="number" min="0" max="100" value="${item.discount}" onchange="updateDiscount(${index}, this.value)"></td>
+                    <td><strong>$${total.toFixed(2)}</strong></td>
+                    <td><button class="btn-remove" onclick="removeItem(${index})">Remove</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            document.getElementById('grandTotal').innerText = grandTotal.toFixed(2);
+        }
+    </script>
 </body>
 </html>

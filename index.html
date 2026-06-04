@@ -24,5 +24,32 @@
 </div>
 </div>
 <script src="app.js"></script>
+  <script>
+let total=0;
+fetch('taakhi_prices.json')
+.then(r=>r.json())
+.then(data=>{
+window.allData=data;
+
+document.getElementById('search').addEventListener('input',function(){
+let q=this.value.toLowerCase();
+let rows=data.filter(x=>x.name.toLowerCase().includes(q)).slice(0,100);
+let html='';
+rows.forEach((item,i)=>{
+html+=`<tr>
+<td><input type="checkbox" onchange="updateTotal(${item.price},this)"></td>
+<td>${item.name}</td>
+<td>${item.code}</td>
+<td>${item.price.toFixed(2)}</td>
+</tr>`;
+});
+document.getElementById('results').innerHTML=html;
+});
+});
+function updateTotal(price,cb){
+total += cb.checked ? price : -price;
+document.getElementById('total').innerText=total.toFixed(2);
+}
+</script>
 </body>
 </html>
